@@ -1,0 +1,26 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# dev
+CLAUDE.md
+.claude/
+.ruff_cache/
+
+# local recovery scratch — never commit
+pi_passwords.txt
+pi_ssh_try.sh
+
+# Credentials & personal config — never commit (ship the .example.toml files instead)
+credentials.toml
+config.toml
+
+# Local database
+*.db

@@ -1,0 +1,11 @@
+[Unit]
+Description=msgsift — web frontend (FastAPI/uvicorn)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=%h/.local/bin/msgsift-web
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

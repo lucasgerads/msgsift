@@ -1,0 +1,8 @@
+[Unit]
+Description=msgsift — nightly recap + day rollover
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/msgsift-nightly

@@ -1,0 +1,60 @@
+# Copy this file to ~/.config/msgsift/config.toml and edit it.
+# Secrets (passwords, API tokens) go in a separate credentials.toml in the same dir.
+# Override the config location with the MSGSIFT_CONFIG_DIR environment variable.
+
+[classifier]
+backend = "ollama"   # "ollama" (local, private) | "cloudflare" (offloaded, better model)
+
+[classifier.ollama]
+model = "qwen2.5:3b"
+url = "http://localhost:11434"
+
+[classifier.cloudflare]
+model = "@cf/mistralai/mistral-small-3.1-24b-instruct"
+account_id = "your-cloudflare-account-id"
+# api_token goes in credentials.toml
+
+# One or more IMAP accounts. Each needs a unique `name`; the password for that
+# account lives in credentials.toml under [imap_passwords] keyed by the same name.
+[[sources.imap]]
+name = "personal"
+enabled = true
+host = "imap.gmail.com"
+port = 993
+user = "you@example.com"
+max_emails = 20
+
+# [[sources.imap]]
+# name = "work"
+# enabled = true
+# host = "imap.example.com"
+# port = 993
+# user = "you@work.example.com"
+# max_emails = 20
+
+[storage]
+db_path = "~/.local/share/msgsift/sift.db"
+
+[web]
+host = "127.0.0.1"
+port = 8000
+
+[output]
+mode = "stdout"          # stdout | log
+log_path = "~/.local/share/msgsift/digest.log"
+
+# People who are always treated as ACTION_REQUIRED. Match by exact email or by domain.
+[[vip]]
+email = "important.person@client.example.com"
+name = "Important Person"
+note = "Key client, always respond within 24h"
+
+[[vip]]
+domain = "bigclient.example.com"
+note = "Anyone from this company is high priority"
+
+# Content-based forwarding hints (shown in the digest; matched on subject + snippet).
+[[routing.rules]]
+if_contains = ["invoice", "payment", "billing"]
+forward_to = "accounting@example.com"
+job_description = "Handle billing and invoice queries"

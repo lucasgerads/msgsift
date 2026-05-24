@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>msgsift — {{ day }}</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 760px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      line-height: 1.45;
+    }
+    h1 { margin-bottom: 0.25rem; }
+    .sub { color: #888; font-size: 0.9rem; margin-top: 0; }
+    .daynav {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .daynav .current { font-size: 1.2rem; font-weight: 600; }
+    .daynav a { text-decoration: none; opacity: 0.7; }
+    .daynav a:hover { opacity: 1; }
+    .badge { font-size: 0.7rem; background: #4a90d9; color: #fff; padding: 0.05rem 0.4rem; border-radius: 4px; }
+    .summary {
+      margin: 1rem 0;
+      padding: 0.8rem 1rem;
+      background: #4a90d922;
+      border-left: 3px solid #4a90d9;
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+    h2 {
+      margin-top: 2rem;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #888;
+      border-bottom: 1px solid #ccc3;
+      padding-bottom: 0.25rem;
+    }
+    .item {
+      display: flex;
+      gap: 0.6rem;
+      align-items: flex-start;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid #8881;
+    }
+    .item.done .title { text-decoration: line-through; color: #999; }
+    .item.done .reason, .item.done .reply { opacity: 0.5; }
+    .body { flex: 1; min-width: 0; }
+    .title { font-weight: 600; }
+    .meta { font-size: 0.85rem; color: #888; }
+    .reason { font-size: 0.9rem; margin-top: 0.2rem; }
+    .reply {
+      font-size: 0.85rem;
+      margin-top: 0.3rem;
+      padding: 0.4rem 0.6rem;
+      background: #8881;
+      border-radius: 6px;
+      white-space: pre-wrap;
+    }
+    .tag {
+      font-size: 0.7rem;
+      padding: 0.05rem 0.4rem;
+      border-radius: 4px;
+      background: #8882;
+      color: #888;
+    }
+    .add {
+      margin: 1.5rem 0;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .add input[type=text] {
+      flex: 1;
+      min-width: 180px;
+      padding: 0.5rem;
+      border: 1px solid #8884;
+      border-radius: 6px;
+      background: transparent;
+      color: inherit;
+    }
+    button {
+      padding: 0.4rem 0.8rem;
+      border: 1px solid #8884;
+      border-radius: 6px;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+    }
+    button:hover { background: #8882; }
+    .check { background: none; border: none; font-size: 1.2rem; padding: 0; cursor: pointer; }
+    .recent { margin-top: 2.5rem; font-size: 0.85rem; }
+    .recent a { display: inline-block; margin-right: 0.6rem; }
+    a { color: inherit; }
+  </style>
+</head>
+<body>
+  <h1>msgsift</h1>
+  <p class="sub">Your email-centered todo list.</p>
+
+  <div class="daynav">
+    <a href="/day/{{ prev_day }}" title="previous day">&larr;</a>
+    <span class="current">{{ day }}</span>
+    {% if is_today %}<span class="badge">today</span>{% endif %}
+    <a href="/day/{{ next_day }}" title="next day">&rarr;</a>
+  </div>
+
+  {% if summary %}
+    <div class="summary">{{ summary }}</div>
+  {% endif %}
+
+  {% if is_today %}
+    <form class="add" action="/todo" method="post">
+      <input type="text" name="title" placeholder="Add a todo…" required>
+      <input type="text" name="note" placeholder="note (optional)">
+      <button type="submit">Add</button>
+    </form>
+  {% endif %}
+
+  {% if not grouped %}
+    <p class="sub">Nothing on this day.</p>
+  {% endif %}
+
+  {% for label, items in grouped.items() %}
+    <h2>{{ label.replace("_", " ") }} ({{ items|length }})</h2>
+    {% for item in items %}
+      <div class="item {{ 'done' if item.done }}">
+        <form action="/done/{{ item.id }}" method="post">
+          <input type="hidden" name="done" value="{{ 'false' if item.done else 'true' }}">
+          <input type="hidden" name="day" value="{{ day }}">
+          <button class="check" type="submit" title="{{ 'reopen' if item.done else 'mark done' }}">
+            {{ '☑' if item.done else '☐' }}
+          </button>
+        </form>
+        <div class="body">
+          <div class="title">{{ item.title }}</div>
+          <div class="meta">
+            {% if item.is_manual %}<span class="tag">manual</span>{% else %}<span class="tag">{{ item.source }}</span>{% endif %}
+            {% if item.sender %} · {{ item.sender }}{% endif %}
+          </div>
+          {% if item.reason %}<div class="reason">{{ item.reason }}</div>{% endif %}
+          {% if item.suggested_reply %}<div class="reply">↳ {{ item.suggested_reply }}</div>{% endif %}
+          {% if item.forward_to %}<div class="meta">→ forward to {{ item.forward_to }}{% if item.forward_note %}: {{ item.forward_note }}{% endif %}</div>{% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  {% endfor %}
+
+  {% if recent_days %}
+    <div class="recent">
+      <strong>Recent days:</strong>
+      {% for d in recent_days %}
+        <a href="/day/{{ d }}">{{ d }}</a>
+      {% endfor %}
+    </div>
+  {% endif %}
+</body>
+</html>

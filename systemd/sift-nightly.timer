@@ -1,0 +1,9 @@
+[Unit]
+Description=Run msgsift nightly recap + rollover at end of day
+
+[Timer]
+OnCalendar=*-*-* 23:55:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
