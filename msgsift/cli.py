@@ -1,3 +1,5 @@
+import sys
+
 from . import store
 from .classifier import Classifier
 from .config import load_config
@@ -55,16 +57,25 @@ def main() -> None:
     conn = store.connect(config)
     results = []
     for msg in messages:
+        # Skip emails already classified and stored — avoids re-burning LLM
+        # quota on the same persistent unread mails each run.
+        if store.item_exists(conn, msg.source, msg.id):
+            continue
         vip_note = _match_vip(msg.sender, vips)
         routing_ctx = _match_rules(msg, rules)
-        classification = classifier.classify(msg, vip_note, routing_ctx)
+        try:
+            classification = classifier.classify(msg, vip_note, routing_ctx)
+        except Exception as e:
+            print(f"classify failed for {msg.source} {msg.id}: {e}", file=sys.stderr)
+            continue
         if vip_note:
             classification.label = "ACTION_REQUIRED"
         store.upsert_email(conn, msg, classification)
         results.append((msg, classification))
     conn.close()
 
-    write_digest(results, config)
+    if results:
+        write_digest(results, config)
 
 
 if __name__ == "__main__":

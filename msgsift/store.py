@@ -88,6 +88,16 @@ def _migrate(conn: sqlite3.Connection) -> None:
         conn.commit()
 
 
+def item_exists(conn: sqlite3.Connection, source: str, external_id: str | None) -> bool:
+    if external_id is None:
+        return False
+    row = conn.execute(
+        "SELECT 1 FROM items WHERE source = ? AND external_id = ? LIMIT 1",
+        (source, external_id),
+    ).fetchone()
+    return row is not None
+
+
 def upsert_email(conn: sqlite3.Connection, msg: Message, cls: Classification) -> None:
     conn.execute(
         """
